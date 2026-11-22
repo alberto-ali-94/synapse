@@ -1,8 +1,12 @@
 # NOVA — Neural Omnimodal Virtual Agent
 
-Nova is a macOS Apple Silicon voice-assistant prototype in Project Synapse. It supports Italian conversations, a local FRIDAY voice, session-level speaker verification and persistent personal memory. [Installation and enrollment](INSTALL.md).
+Nova is the voice assistant in Project Synapse. It runs on macOS Apple Silicon with Italian speech, Online and Local conversation modes, speaker verification and a persistent personal-memory archive.
 
-## Start and choose a mode
+## Setup and launch
+
+Follow [INSTALL.md](INSTALL.md) for the Python environment, model downloads, audio devices and credentials. Speech synthesis requires the private FRIDAY reference audio and transcript under `voices/friday/`; these assets are not distributed.
+
+From `nova/`:
 
 ```sh
 .venv/bin/python nova.py
@@ -10,23 +14,68 @@ Nova is a macOS Apple Silicon voice-assistant prototype in Project Synapse. It s
 .venv/bin/python nova.py local
 ```
 
-With no argument, the window loads without initializing models. Select Online or Local; the conversation button unlocks after preparation. An initialization error permits another selection. Changing a successfully prepared mode requires restarting the application. The `--verbose` switch restores timings, detailed diagnostics and warnings; other former command-line options are removed; their conservative settings remain internal defaults.
+With no argument, the window opens before model loading. Select **Online** or **Local** to prepare the pipeline. Conversation controls become available when preparation finishes. A failed initialization restores mode selection; changing a prepared mode requires restarting Nova.
 
-| Component | Local | Online |
+| Component | Online | Local |
 |---|---|---|
-| Conversation | Ollama Qwen3.5 4B MXFP8 | GPT-6 Luna API |
-| Memory classification | GLiClass Multilang Mini | Jev API |
-| Text embeddings | Multilingual E5 Small, CPU | Same local encoder |
-| Memory storage | Local Qdrant | Same local Qdrant |
-| Speaker verification | Local SpeechBrain ECAPA-TDNN | Same local verifier |
-| Transcription | MLX Whisper Large V3 Turbo | Same local transcriber |
-| Speech | Qwen3-TTS 1.7B Base 8-bit / private FRIDAY reference | Same local voice |
+| Conversation | GPT-6 Luna API | Ollama `qwen3.5:4b-mxfp8` |
+| Memory classification | Jev API | GLiClass Multilang Mini on CPU |
+| Transcription | MLX Whisper Large V3 Turbo | Same |
+| Speech | Qwen3-TTS 1.7B Base 8-bit with FRIDAY reference | Same |
+| Embeddings | Multilingual E5 Small, 384 dimensions, CPU | Same |
+| Storage | Embedded local Qdrant | Same |
+| Speaker verification | SpeechBrain ECAPA-TDNN on CPU | Same |
 
-Online mode sends conversation text, extraction requests and retrieved memory context to OpenAI; classification text goes to TypeSafe. It requires both configured API keys. It does not send speaker-reference recordings to these APIs. Offline and online modes never switch automatically.
+Online requires OpenAI and TypeSafe credentials. Conversation text, extraction requests and retrieved context go to OpenAI; classification text goes to TypeSafe. Microphone transcription, voice synthesis, speaker verification and database storage run locally. Speaker-reference recordings are not sent to either API.
 
-## Terminal output
+Local requires a running Ollama service. Download the models before offline use. Nova does not switch modes automatically when a provider is unavailable.
 
-Normal startup keeps concise API-call events (GPT, Jev or local Ollama), mode readiness, successful memory writes and errors. Timings, classification/voice diagnostics, ordinary warnings, stack traces and third-party initialization prints are hidden. Error and memory status remain visible in the window.
+## Conversation and voice enrollment
+
+1. Prepare a mode and select **Registra la mia voce** to enroll the owner.
+2. Confirm enrollment and read the three displayed phrases using the usual microphone.
+3. Start a conversation and speak a complete opening sentence.
+4. Stop to end the session. Starting again repeats speaker verification without reloading the prepared models.
+
+The current owner profile is Alberto. Enrollment stores a normalized voice embedding on the Mac. Initial verification requires at least 2.5 seconds of detected speech; a short or uncertain sample prompts one additional phrase. The first question is retained while verification completes.
+
+Verified owner sessions can retrieve and save personal memories. Missing or unmatched profiles fall back to a guest conversation. Guests do not invoke personal-memory classification, extraction, retrieval or saving. Questions about the verified user's name use session identity directly.
+
+Stop resets identity, conversation history, pending memory proposals and GPT continuation state. Verification runs at the start of each conversation, not continuously: another person speaking during an already verified session inherits that session's access.
+
+Speaker matching is a prototype access check. Its threshold has not been calibrated across genuine and other speakers, and it does not defend against recorded or cloned voices. Enroll only on the owner's trusted Mac.
+
+## Persistent memory
+
+Nova stores personal facts in `.private/memory/`, using Qdrant and normalized E5 embeddings. Each record includes text, type, domain, owner, active state, encoder version, source hash and update time.
+
+### Saving
+
+Explicit requests to remember something can save validated facts directly. Facts proposed from other statements require an affirmative follow-up before writing. Extraction produces at most three atomic memories; the classifier assigns type and domain. Ambiguous or invalid candidates are rejected, and assistant responses are not used as source facts.
+
+The UI reports successful persistence after the database write completes. A final cancellation check precedes the write. Repeated text shares a stable ID; semantically equivalent wording can still create separate records.
+
+### Retrieval
+
+Search uses `query:` and `passage:` E5 prefixes, cosine ranking and up to four candidates. Filters always retain the owner, active state and encoder; type/domain restrictions can be relaxed if they return no candidates. Counts use exact database filters.
+
+Retrieved text is supplied as context for the current question. Similarity ranks candidates; it does not establish that a memory answers the question. There is no fixed, uncalibrated score cutoff. Ownership and permissions come from application code, not generated or retrieved text.
+
+Memory correction, deletion controls, expiration, semantic deduplication, contradiction resolution and encryption at rest are not implemented. Conflicting facts can coexist.
+
+## Audio and session handling
+
+Voice activity detection records mono 16 kHz PCM with a 0.9-second final pause and a 60-second turn limit. The latest recording is written to `prova.wav`. Whisper receives the captured waveform directly.
+
+FRIDAY uses Qwen3-TTS with 0.64-second synthesis chunks and an initial playback buffer. Online responses stream complete sentences into synthesis. Stop aborts audio and cancels further turn processing; an active native model operation may still need to finish before the worker can return.
+
+One worker owns the models and serializes preparation, enrollment and conversation. A full integrated peak-memory measurement is still pending.
+
+## Logging
+
+Normal terminal output shows mode readiness, API-call events, successful memory writes and errors. The window displays conversation, identity and memory status.
+
+Use `--verbose` for timings, warnings and detailed diagnostics:
 
 ```sh
 .venv/bin/python nova.py --verbose
@@ -34,34 +83,22 @@ Normal startup keeps concise API-call events (GPT, Jev or local Ollama), mode re
 .venv/bin/python nova.py local --verbose
 ```
 
-Verbose mode applies to either GUI-selected mode and is preserved by the macOS launcher. Mode-selection buttons disappear as soon as a mode is selected, and reappear if preparation fails. Restart Nova to change a prepared mode.
+The flag also applies when choosing the mode in the window.
 
-## Conversation identity
+## Local data
 
-Use **Registra la mia voce** to enroll three samples explicitly through the window. The first utterance of each conversation is compared with Alberto's local profile. Verification is not repeated during that conversation. Guests and uncertain speakers can converse but cannot invoke personal-memory classification, retrieval, extraction or saving. Stop clears identity, pending memory proposals, conversation history and GPT continuation state. A new Start requires verification again; the models remain loaded.
+| Location | Contents |
+|---|---|
+| `voices/friday/` | Private voice reference audio and transcript |
+| `.private/speaker/` | Owner voice profile and speaker-model assets |
+| `.private/memory/` | Persistent personal-memory database |
+| `prova.wav` | Latest microphone recording, overwritten each turn |
+| `config.toml` | Private API configuration |
 
-The owner must enroll on their trusted device. The voice threshold is a provisional operating value, not a measured security guarantee. Recorded/cloned voices and another person taking over an authenticated conversation remain limitations. Guest and owner conversations do not share application-side context, but provider-side retention of previous cloud requests is separate.
+These paths are excluded from version control. Close Nova before backing up `.private/` and protect the files with the Mac account and disk security settings.
 
-## Personal memory
+## Validation and development
 
-The live archive is under `.private/memory/`, separate from the student experiment. Memories contain an ID, text, type, domain, owner, active status, encoder name, provenance and timestamp. The owner ID is assigned by application policy, never by a model. Verified session identity is supplied to the conversational model independently of database availability; direct name questions use that session identity without a classifier or database lookup. Query filters enforce owner and active status; confidently classified type/domain narrow retrieval. Counting uses exact structured filters.
+Local regression checks cover session reset, guest isolation, memory confirmations, extraction validation, cancellation and audio streaming. Model loading and persistence across database reopen have been exercised locally; cloud diagnostics have checked Jev access and GPT structured extraction.
 
-Explicit remember requests produce validated atomic candidates; the classifier assigns their categories. Implicit facts are proposed and require a subsequent affirmative reply before saving. A rejected/ambiguous extraction is not saved. Only user messages are candidate sources; assistant answers are not stored as personal facts. The application commits saved candidates only after the final cancellation check. Exact duplicate text uses the same ID.
-
-An LLM extracts candidate text because classification alone cannot split a conversation into atomic memories. Online extraction uses an independent, non-stored GPT request with a strict JSON schema; Local extraction uses the configured Ollama model. Category and intent scores use provisional thresholds, not calibrated probabilities. Deterministic consent rules complement the local zero-shot classifier.
-
-Retrieval uses normalized E5 query embeddings and cosine ranking of up to four candidates. There is no uncalibrated absolute score cutoff: a lower cosine score can still be a correct factual match. If topical filters produce no candidates, the search may relax type/domain while always retaining owner, active-state and encoder filters. The conversational model must use only explicit candidate facts that answer the question, and say when no candidate provides an answer. Candidate ranking does not guarantee relevance. Retrieved content is data, not instructions.
-
-Automatic semantic deduplication, contradiction resolution, expiration, memory editing/deletion controls, and encryption at rest are not implemented. Conflicting facts can coexist: these require a later memory-management increment before relying on automatic updates. Explicit requests whose extraction/classification fails do not produce a successful-save acknowledgement. The interface shows owner-only memory status (pending confirmation, saved to disk, retrieved candidates or a sanitized component/error code); terminal diagnostics identify the failing stage without logging credentials or raw provider bodies.
-
-## Audio and lifecycle
-
-Local VAD records mono 16 kHz PCM, with a 0.9-second final pause and a 60-second cap. The latest utterance remains in `prova.wav`. FRIDAY uses conservative 0.64-second synthesis chunks and an initial playback buffer. Online responses stream complete sentences to synthesis. Stop aborts audio; cancellation is checked before committing replies and memories. Native synthesis/other blocking model operations cannot always be interrupted mid-computation.
-
-There is one model-owning worker; enrollment, conversation and initialization do not run concurrently. CPU classifiers and embeddings add memory and latency; a full integrated conversation peak has not yet been measured. Do not infer required RAM from downloaded weight sizes.
-
-## Validation and scope
-
-Hardware-free regression tests cover mode selection, session reset, guest isolation, pending confirmations, cancellation, extraction validation and existing audio/streaming behavior. Local model loading and temporary-database persistence have been exercised with synthetic data. One authorized synthetic Jev request and two authorized synthetic GPT extraction requests verified the cloud request formats: legacy JSON mode failed with HTTP 400, while strict JSON schema succeeded. Confirmed persistence across sessions and guest exclusion were checked locally with synthetic data. Actual owner/guest voice acceptance and a full spoken end-to-end cloud conversation still require user validation.
-
-Wake word activation, tool execution, Atlas integration and remote access remain future work. FRIDAY reference assets, runtime environments, tests and student experiments are local-only and are not distributed in a source-only checkout. See [INSTALL.md](INSTALL.md).
+Full spoken cross-conversation memory validation and owner/guest acceptance testing after the latest verification changes remain pending. Wake word activation, external tool execution, Atlas integration and remote access are planned.

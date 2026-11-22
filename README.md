@@ -1,115 +1,117 @@
 # Project Synapse
 
-**A Modular AI Ecosystem for Personal Assistance and Home Automation**
+Project Synapse brings together a voice assistant, Raspberry Pi sensors and cameras, and a future coordination service. I develop each module independently before connecting them through shared interfaces.
 
-Project Synapse is a learning and development project bringing together conversational AI, sensor and camera management, and home automation. Its long-term goal is a connected system in which specialized modules share information and carry out defined operations through a common coordination layer.
+| Module | Purpose | Current state |
+|---|---|---|
+| [Nova](nova/README.md) | Personal voice assistant | Online and Local conversations, speaker verification and persistent personal memory on an Apple Silicon Mac |
+| [Cerberus](cerberus/README.md) | Motion detection and camera acquisition | PIR-triggered capture in C; a standalone Python YuNet script detects faces and saves crops on Mac and Raspberry Pi |
+| Atlas | Coordination and personal remote access | Planned |
 
-The project spans desktop and edge computing. Raspberry Pi is the platform used for the current embedded prototype, while the voice assistant runs on an Apple Silicon Mac. Additional devices and deployment options will be introduced as individual modules develop.
+## Architecture
 
-## The ecosystem
-
-| Component | Role in the target system |
-|---|---|
-| **Nova** | The personal assistant: conversation, user requests and spoken communication of results |
-| **Atlas** | The coordination layer: module status, events, operations and shared access to recordings and information |
-| **Cerberus** | Sensor and camera management: acquisition, monitoring, event detection and surveillance |
-| **Future home automation modules** | Specialized control of actuators and device-specific functions within the home installation |
-
-Nova provides the conversational interface, Atlas connects requests with defined module operations, and Cerberus supplies observations from sensors and cameras. Future actuator modules will extend this ecosystem with physical control functions.
-
-## Target architecture
-
-**The following diagram describes the intended architecture. The module connections are planned and are not yet implemented.**
+Nova and Cerberus currently run as independent applications. Atlas will connect conversation requests, device operations and acquisition events.
 
 ```mermaid
 flowchart TD
-    User[User] <--> Nova[Nova - Personal assistant]
-    Nova <--> Atlas[Atlas - Coordination]
-    Atlas <--> Cerberus[Cerberus - Acquisition and monitoring]
-    Cerberus <--> Sensors[Sensors]
-    Cerberus <--> Cameras[Cameras]
-    Atlas <--> Automation[Future home automation modules]
-    Automation <--> Actuators[Actuators and controlled devices]
+    User[User] <--> Nova[Nova: voice assistant]
+    Nova <-. planned .-> Atlas[Atlas: coordination]
+    Atlas <-. planned .-> Cerberus[Cerberus: acquisition and analysis]
+    Cerberus <--> PIR[Motion sensor]
+    Cerberus <--> Camera[Camera]
+    Atlas <-. planned .-> Devices[Future home automation modules]
 ```
 
-The intended interaction is a request passing from Nova to Atlas, then to the responsible module. That module will return its actual result or status for Atlas and Nova to present to the user. Operation interfaces, validation rules and failure handling still need to be designed and tested.
+## Nova
 
-## Current status
+**Neural Omnimodal Virtual Agent** runs on macOS Apple Silicon. It records speech, transcribes it locally, generates a response and speaks through a private FRIDAY voice reference.
 
-| Component or workstream | Status | Available today |
+| Component | Online | Local |
 |---|---|---|
-| **[Nova](nova/README.md)** | Prototype with Online/Local modes | Voice conversation, session-level speaker verification and local persistent memory; full spoken cross-conversation validation remains pending |
-| **[Hardware Control Center](docs/control-center.md)** | Earlier embedded prototype | NTC/PCF8591, buttons and LED code remains available; this circuit is no longer the current breadboard setup |
-| **Python/Keras experiments** | Learning and experimentation | Standalone notebooks for data preparation, model training and evaluation |
-| **Atlas** | Planned | Coordination responsibilities defined; no shared runtime or module integration yet |
-| **Cerberus** | Motion-triggered capture prototype | HC-SR501 on GPIO18 triggers the camera C API and saves a 640×480 RGB PPM; first Raspberry Pi capture reported by the student |
-| **Home automation modules** | Planned | Dedicated actuator control modules and their interfaces remain to be developed |
+| Conversation | GPT-6 Luna | Ollama Qwen3.5 4B MXFP8 |
+| Memory classification | Jev | GLiClass Multilang Mini |
+| Transcription | Local Whisper Large V3 Turbo | Same |
+| Speech synthesis | Local Qwen3-TTS 1.7B Base 8-bit | Same |
+| Personal memory | Local E5 embeddings and Qdrant | Same |
+| Speaker verification | Local SpeechBrain ECAPA-TDNN | Same |
 
-Nova and the C prototype currently run independently. The repository does not yet provide an integrated home automation system, autonomous actuator management or a completed surveillance service.
-
-## Repository and getting started
-
-| Area | Contents | Entry point |
-|---|---|---|
-| `nova/` | Local voice assistant and its environment snapshot | [Nova README](nova/README.md) and [installation guide](nova/INSTALL.md) |
-| `cerberus/src/`, `cerberus/include/` and `cerberus/Makefile` | Raspberry Pi acquisition and GPIO prototype | [Hardware Control Center guide](docs/control-center.md) |
-| `Keras_Practice/` | Standalone AI and Deep Learning experiments | Notebooks and accompanying data in that directory |
-| `docs/` | Component documentation and hardware illustrations | [Control Center hardware, build and limitations](docs/control-center.md) |
-
-### Nova
-
-**NOVA** stands for **Neural Omnimodal Virtual Agent**. The name expresses the module’s long-term vision; the current prototype provides turn-based voice conversation.
-
-Nova uses local Whisper Large V3 Turbo and Qwen3-TTS with a private FRIDAY reference. **Online** uses GPT-6 Luna and Jev; **Local** uses Ollama Qwen3.5 4B MXFP8 and GLiClass Multilang Mini. Both use local Multilingual E5 Small embeddings, persistent Qdrant storage and SpeechBrain speaker verification. Online mode sends conversation/extraction and retrieved context to OpenAI, and classification text to TypeSafe; see the [Nova README](nova/README.md) for data boundaries and limitations.
-
-With the environment, model weights and private assets available:
+After completing the [installation](nova/INSTALL.md), launch from `nova/`:
 
 ```sh
-cd nova
 .venv/bin/python nova.py
-# Or select a mode at startup:
+# Or choose a mode directly:
 .venv/bin/python nova.py online
 .venv/bin/python nova.py local
 ```
 
-Without a mode, select Online or Local in the window. The selectors hide during preparation; conversation unlocks when ready. Stop clears conversation identity and context. Personal memory requires Alberto's voice verification at the start of each conversation; the enrolled profile persists between launches. Guests cannot access or save personal memories. The voice threshold is provisional, and replay or a different person taking over an authenticated conversation remain limitations.
+With no mode argument, select Online or Local in the window. Enroll the owner's voice using **Registra la mia voce**. Each new conversation verifies the speaker before enabling personal memory; guests can converse without reading or writing the owner's archive. Stop clears the conversation and its identity while keeping the models loaded.
 
-Implicit memory proposals require confirmation; retrieval uses owner-filtered candidates. Memory editing/deletion, contradiction handling, wake word activation and agentic tools remain future work. Default terminal output shows salient events and errors; add `--verbose` for timings, warnings and diagnostics. Full spoken cross-conversation memory validation after the latest fixes remains pending; automated and isolated integration checks do not replace it.
+Explicit memory requests can save validated facts directly. Other proposed memories require confirmation. Retrieval combines semantic similarity with owner, category and state filters. Online mode sends conversation, extraction and retrieved context to OpenAI, and classification text to TypeSafe. Audio processing and the memory database remain local.
 
-OmniVoice experiments and local validation suites are development-only files and are excluded from version control.
+See the [Nova README](nova/README.md) for conversation controls, storage and current limitations. The private voice reference is required and is not included in the repository.
 
-Private voice assets are excluded from version control and are not distributed. A source checkout alone does not include everything required for speech synthesis. See the [installation guide](nova/INSTALL.md) and [dependency snapshot](nova/requirements.txt) for the public setup information.
+## Cerberus
 
-### Cerberus
+The current hardware is a Raspberry Pi 3 B+, Camera Module 3 NoIR and an HC-SR501 PIR sensor. A rising edge on BCM GPIO18 triggers a synchronous camera capture through a C API backed by libcamera. The image is saved as a 640×480 RGB PPM.
 
-The current Raspberry Pi setup uses Camera Module 3 NoIR and an HC-SR501 (L jumper, OUT on BCM GPIO18 / physical pin 12). From `cerberus/`, run `make cerberus`, create `images/` if absent, then run `./cerberus`. A rising GPIO edge calls `acquire_and_save_frame`; the default output is `images/camera-frame.ppm`, overwritten at each capture. An optional first argument supplies a complete output path. Capture is synchronous; latency, queued-event behavior and sustained operation still need evaluation. Face detection, identity recognition and pre/post-event clips are not implemented.
+On a configured Raspberry Pi, from the repository root:
 
-### Earlier embedded prototype
+```sh
+cd cerberus
+make cerberus
+mkdir -p images
+./cerberus
+```
 
-The Hardware Control Center runs on Raspberry Pi/Linux with the configured NTC/PCF8591 circuit, GPIO buttons and LED. See its [dedicated guide](docs/control-center.md) before building or connecting hardware; it contains the earlier prototype wiring assumptions, build commands, behavior and known limitations.
+The default output is `images/camera-frame.ppm`. Pass an output path to choose another destination:
 
-## Roadmap
+```sh
+./cerberus images/motion.ppm
+```
 
-1. **Consolidate Nova:** continue evaluating conversational quality, resource use, bounded context and explicit persistent-memory controls.
-2. **Introduce Atlas:** define module interfaces, status and event models, and verifiable operations; connect Nova to this coordination layer.
-3. **Extend Cerberus:** consolidate motion-triggered capture, then add bounded pre-event history, event-triggered recordings and transfer to Atlas.
-4. **Evaluate event analysis:** develop and compare Keras models for Cerberus, including recognition and alerts, using explicit datasets and evaluation criteria.
-5. **Add home automation modules:** define device-specific actuator control, operating limits, state feedback and integration through Atlas.
-6. **Extend access securely:** design identity, authorization, TLS, isolation and request limits before personal remote access; an iPhone client remains optional future work.
+The [Cerberus guide](cerberus/README.md) covers build requirements, sensor configuration and manual capture.
 
-These are development goals, not features already delivered. Device choices, communication protocols and integration details will be settled through implementation and testing.
+### Face detection
 
-## Technologies and development approach
+The YuNet script processes a still image with OpenCV, draws face boxes and saves each valid face crop separately. Input dimensions come from the loaded image, crop coordinates are bounded by the image edges, and annotations are drawn on a separate copy.
 
-- **C on Linux/Raspberry Pi** for the current acquisition, concurrency and GPIO control work.
-- **Python** for Nova and the planned AI and coordination services.
-- **Keras** for data preparation, Deep Learning experiments, model evaluation and error analysis.
-- **MLX, Whisper, Qwen and Ollama** for the current local conversational pipeline on Apple Silicon.
+I have checked single-face and five-person photos on Mac, then run the experiment on the Raspberry Pi without a graphical desktop. The Pi saves JPEG output for inspection on the Mac. Runtime has not yet been benchmarked. Image scale matters: reducing a large portrait resolved partial detections in the initial test.
 
-The project grows through concrete prototypes. Documentation distinguishes implemented behavior, manually reported results and planned work. Component guides retain the operational details and limitations of each prototype; the main README presents the ecosystem and its direction.
+The script is [cerberus/src/face_detection.py](cerberus/src/face_detection.py). It accepts an input image and an existing output directory as positional arguments. From `cerberus/`, with its Python environment active:
 
-## Version-control scope
+```sh
+python src/face_detection.py images/camera-frame.ppm images
+```
 
-The published sources include Nova's official launcher and `nova_core/`, the embedded prototype, documentation and the Keras learning notebooks. Local test/probe directories (`nova/tests/`, `cerberus/tests/`, `test/`), Nova experiments (`nova/experiments/`), archived probes (`old/`) and personal notes (`Appunti/`) are excluded. Environments, model caches, private voice assets, recordings and generated application bundles are also excluded.
+Use a captured PPM or another supported image as input. The C capture application and Python detector are still run separately; automatic PIR-to-detector integration and identity recognition are still to come.
 
-Ignoring a path does not remove files already present in earlier commits. These exclusions apply to future commits; local files remain available on the development machine.
+## Repository layout
+
+```text
+cerberus/
+  include/        C interfaces for GPIO, camera and capture
+  src/            C acquisition, libcamera backend and Python face detector
+  Makefile        Motion capture, manual capture and legacy control targets
+  README.md       Raspberry Pi setup and usage
+nova/
+  nova.py         Desktop launcher
+  nova_core/      Audio, conversation, identity and memory
+  INSTALL.md      Environment and private-asset setup
+  README.md       Assistant usage and design
+docs/
+  control-center.md   Earlier temperature/button/LED prototype
+```
+
+Local Keras notebooks, experiments, test utilities, generated images, virtual environments and private assets are kept outside the published source tree. The [Control Center guide](docs/control-center.md) documents the earlier NTC/PCF8591 circuit, which is separate from the current PIR/camera setup.
+
+## Next steps
+
+- Run YuNet on a Cerberus camera image, then connect detection to the acquisition workflow.
+- Build a face dataset across separate recording sessions and train a recognizer with Keras, including error analysis and known/unknown evaluation.
+- Evaluate Nova's speaker matching and persistent memory across full spoken conversations; add memory correction and deletion controls, then wake word activation and tool use.
+- Develop Atlas contracts and coordination, with identity, authorization, TLS, secret handling and access limits before remote exposure.
+- Add bounded pre-event video history and event clips, followed by device-specific home automation modules.
+
+## Stack
+
+C handles embedded application logic and Linux GPIO events. A C++ backend exposes libcamera capture through a C interface. Python powers Nova and the face-detection experiment; Keras is used for model development. Nova uses MLX on Apple Silicon, Ollama for local conversation and Qdrant for persistent vector storage.
