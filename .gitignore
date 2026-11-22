@@ -1,0 +1,18 @@
+# Build artifacts
+*.o
+/old
+
+# macOS metadata
+.DS_Store
+
+# Local learning notes, scratch work and archived probes
+/Appunti/
+/test/
+/Keras_Practice/
+
+
+
+# Python runtime caches
+__pycache__/
+*.py[cod]
+

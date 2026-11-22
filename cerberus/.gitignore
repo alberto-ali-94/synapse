@@ -1,0 +1,13 @@
+# Local Python environment and bytecode
+/config.toml
+.venv/
+.venv-backup-*/
+__pycache__/
+*.py[cod]
+
+# Cerberus experiments and tests not yet released
+experiments/
+tests/
+
+# Cerberus images
+images/

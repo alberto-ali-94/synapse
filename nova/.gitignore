@@ -1,0 +1,29 @@
+# Local Python environment and bytecode
+/config.toml
+.venv/
+.venv-backup-*/
+__pycache__/
+*.py[cod]
+
+# Microphone recordings and generated audio
+*.wav
+
+# Private local voice assets
+/voices/friday/
+
+# Generated local macOS runtime bundle
+.macos/
+
+# Opt-in beta environment and local model checkpoints
+.venv-beta/
+.models/
+
+# macOS Finder metadata
+.DS_Store
+
+# Local validation and experimental implementations (not published)
+/tests/
+/experiments/
+
+# Personal memory, biometric profile and model runtime assets
+/.private/

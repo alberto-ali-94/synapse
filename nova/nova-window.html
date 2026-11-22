@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>NOVA — Neural Omnimodal Virtual Agent</title><style>html,body{margin:0;height:100%;background:#080e19}body{min-width:396px}</style></head><body>
+<div id="nova-preview" >
+  <div class="nv-window" aria-label="Finestra Nova">
+    <header class="nv-titlebar"><h1>NOVA</h1><p class="nv-subtitle">Neural Omnimodal Virtual Agent</p></header>
+    <div class="nv-content">
+      <section class="nv-main">
+        <div class="nv-eyebrow">ASSISTENTE PERSONALE</div>
+        <div class="nv-sphere"><canvas aria-label="Nova: piccolo alone blu e viola con 207 raggi e pallini. Oscillazioni a riposo, onda luminosa in ascolto, rotazione durante il pensiero ed espansione durante la voce" role="img"></canvas></div>
+        <div class="nv-status" aria-live="polite">In attesa</div>
+        <div class="nv-hint">Una voce, uno spazio tutto suo.</div>
+        <div class="nv-modes" role="group" aria-label="Modalità di Nova"><button class="nv-mode" data-mode="online">Online</button><button class="nv-mode" data-mode="local">Local</button></div>
+        <div class="nv-session" aria-live="polite"></div>
+        <div class="nv-memory-status" aria-live="polite" hidden></div>
+        <button class="nv-enroll" hidden>Registra la mia voce</button>
+        <div class="nv-controls"><button class="nv-mic" aria-label="Avvia conversazione" aria-pressed="false" disabled><svg class="nv-start-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg><svg class="nv-stop-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/></svg></button><button class="nv-chat" aria-expanded="false"><span aria-hidden="true">☷</span> Conversazione</button></div>
+      </section>
+      <aside class="nv-conversation" hidden><div class="nv-panel-title">Conversazione</div><p class="nv-empty">Le tue conversazioni appariranno qui.</p><div class="nv-messages" aria-live="polite"></div></aside>
+    </div>
+    <footer><span class="nv-indicator"></span> Nova · fine turno automatica</footer>
+  </div>
+</div>
+<style>
+#nova-preview{height:100vh;height:100dvh;padding:0;box-sizing:border-box;--nv-scale:1;--nv-blue:#62d8ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#ecf2fa}
+#nova-preview *{box-sizing:border-box}
+#nova-preview .nv-window{height:100%;display:flex;flex-direction:column;width:100%;max-width:none;margin:0;background:#080e19;border:0;border-radius:0;box-shadow:none;overflow:hidden}
+#nova-preview .nv-window.nv-wide{max-width:none}
+#nova-preview .nv-titlebar{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;text-align:center;height:72px;flex-shrink:0;padding:4px 16px;border:0;background:transparent;color:#a4b2c5}
+#nova-preview .nv-titlebar h1{margin:0;font:inherit;font-size:28px;line-height:1.2;font-weight:400;letter-spacing:3px}
+#nova-preview .nv-subtitle{margin:0;font-size:11px;line-height:1.4;font-weight:400;letter-spacing:.6px;color:#8490a0}
+#nova-preview button{font:inherit;cursor:pointer;color:inherit}
+#nova-preview button:focus-visible{outline:2px solid var(--nv-blue);outline-offset:4px}
+#nova-preview .nv-content{display:flex;flex:1;min-width:0;min-height:0}
+#nova-preview .nv-main{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;text-align:center;padding:8px 12px 16px}
+#nova-preview .nv-eyebrow{order:2;flex-shrink:0;margin-top:10px;font-size:calc(10px * var(--nv-scale));letter-spacing:3px;color:#8295ac}
+#nova-preview .nv-sphere{order:1;flex:1;min-height:0;width:100%;position:relative}
+#nova-preview canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+#nova-preview .nv-status{order:3;flex-shrink:0;margin-top:8px;font-size:calc(20px * var(--nv-scale));font-weight:400;letter-spacing:.5px}
+#nova-preview .nv-hint{order:4;flex-shrink:0;max-height:4.5em;overflow-y:auto;font-size:calc(12px * var(--nv-scale));color:#8e9fb5;margin-top:10px;min-height:18px}
+#nova-preview .nv-controls{order:5;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:calc(12px * var(--nv-scale));margin-top:calc(18px * var(--nv-scale))}
+#nova-preview .nv-mic{display:flex;align-items:center;justify-content:center;width:calc(44px * var(--nv-scale));height:calc(44px * var(--nv-scale));border:1px solid #45657d;background:#142736;border-radius:50%;color:var(--nv-blue)}
+#nova-preview .nv-mic .nv-stop-icon{display:none}
+#nova-preview .nv-mic.nv-active{color:#ffb27a;border-color:#b86d43;background:#38251c}
+#nova-preview .nv-mic.nv-active .nv-start-icon{display:none}
+#nova-preview .nv-mic.nv-active .nv-stop-icon{display:block}
+#nova-preview .nv-chat{display:flex;align-items:center;gap:8px;border:1px solid #2e3c50;border-radius:24px;background:#111c2c;padding:calc(12px * var(--nv-scale)) calc(15px * var(--nv-scale));font-size:calc(12px * var(--nv-scale))}
+#nova-preview footer{flex-shrink:0;border-top:1px solid #ffffff0b;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:10px;color:#8e9fb5}
+#nova-preview .nv-indicator{width:5px;height:5px;background:#73879e;border-radius:50%}
+#nova-preview .nv-conversation{min-width:0;min-height:0;overflow:hidden;width:270px;padding:25px 20px;border-left:1px solid #ffffff0b;display:flex;flex-direction:column;gap:20px;background:#0b1320}
+#nova-preview .nv-conversation[hidden],#nova-preview [hidden]{display:none}
+#nova-preview .nv-panel-title{flex-shrink:0;font-size:calc(14px * var(--nv-scale))}
+#nova-preview .nv-empty{font-size:calc(13px * var(--nv-scale));line-height:1.6;color:#8799b1;margin:0}
+#nova-preview .nv-messages{overflow-y:auto;flex:1;max-height:none;min-height:0;font-size:calc(13px * var(--nv-scale));line-height:1.6;text-align:left}
+#nova-preview .nv-message{margin-bottom:20px;overflow-wrap:anywhere;white-space:pre-wrap}
+#nova-preview .nv-message span{font-size:calc(9px * var(--nv-scale));letter-spacing:1px;color:var(--nv-blue)}
+#nova-preview .nv-message p{margin:8px 0}
+#nova-preview .nv-modes{order:5;display:flex;justify-content:center;gap:12px;margin-top:14px}
+#nova-preview .nv-mode,#nova-preview .nv-enroll{border:1px solid #385273;background:#142139;border-radius:12px;padding:9px 18px}
+#nova-preview .nv-mode[aria-pressed="true"]{border-color:#6eafff;background:#213c60}
+#nova-preview .nv-enroll{order:7;align-self:center;margin-top:10px;font-size:12px}
+#nova-preview .nv-memory-status{order:6;margin-top:5px;font-size:11px;color:#9bb9d7;overflow-wrap:anywhere}
+#nova-preview .nv-session{order:6;margin-top:8px;color:#8e9fb5;font-size:12px;text-align:center}
+#nova-preview [hidden]{display:none!important}
+#nova-preview button:disabled{opacity:.45;cursor:default}
+#nova-preview .nv-hint{overflow-wrap:anywhere}
+#nova-preview .nv-mic svg{width:calc(20px * var(--nv-scale));height:calc(20px * var(--nv-scale))}
+#nova-preview .nv-wide .nv-conversation{width:320px;flex-shrink:0}
+@media(max-width:779px){#nova-preview .nv-content{flex-direction:column}#nova-preview .nv-conversation,#nova-preview .nv-wide .nv-conversation{width:100%;flex:0 0 28%;min-height:0;padding:12px 16px;gap:10px;border-left:0;border-top:1px solid #ffffff0b}}
+@media(prefers-reduced-motion:reduce){#nova-preview .nv-window{transition:none}}
+</style>
+<script>
+(()=>{
+ const root=document.getElementById('nova-preview'),win=root.querySelector('.nv-window'),canvas=root.querySelector('canvas'),ctx=canvas.getContext('2d'),panel=root.querySelector('aside');
+ function resizeContent(){
+  // Typography follows the viewport, not the panel's changing width.
+  const scale=Math.max(1,Math.min(1.15,window.innerWidth/780,window.innerHeight/780));
+  root.style.setProperty('--nv-scale',scale.toFixed(3));
+  if(followMessages&&!panel.hidden)messages.scrollTop=messages.scrollHeight;
+ }
+ let resizeFrame=0;
+ window.addEventListener('resize',()=>{
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame=requestAnimationFrame(resizeContent);
+ });
+ const settings={state:'loading',expanded:false};
+ let labels={choose:'Scegli la modalità',loading:'Caricamento',idle:'In attesa',listen:'Ti ascolto',think:'Sto elaborando',speak:'Nova sta parlando',error:'Si è verificato un errore',stopping:'Arresto in corso'};
+ const mic=root.querySelector('.nv-mic'),messages=root.querySelector('.nv-messages');
+ let revision=-1,connected=false,messageCount=0,language=null,conversation=false,session=null;
+ let expanding=false,followMessages=true;
+ messages.addEventListener('scroll',()=>{
+  if(!panel.hidden&&messages.clientHeight>0)followMessages=messages.scrollHeight-messages.scrollTop-messages.clientHeight<40;
+ });
+ resizeContent();
+ function applyLanguage(data){
+  if(language===data.language)return;
+  language=data.language;
+  const en=language==='en';
+  document.documentElement.lang=en?'en':'it';
+  if(en)labels={loading:'Loading',idle:'Ready',listen:'Listening',think:'Thinking',speak:'Nova is speaking',error:'An error occurred',stopping:'Stopping'};
+  root.querySelector('.nv-eyebrow').textContent=en?'PERSONAL ASSISTANT':'ASSISTENTE PERSONALE';
+  root.querySelector('.nv-chat').replaceChildren(Object.assign(document.createElement('span'),{textContent:'☷'}),document.createTextNode(en?' Conversation':' Conversazione'));
+  root.querySelector('.nv-panel-title').textContent=en?'Conversation':'Conversazione';
+  root.querySelector('.nv-empty').textContent=en?'Your conversations will appear here.':'Le tue conversazioni appariranno qui.';
+  root.querySelector('footer').replaceChildren(Object.assign(document.createElement('span'),{className:'nv-indicator'}),document.createTextNode(en?` Nova · automatic turn detection · ${data.voice}`:` Nova · fine turno automatica · ${data.voice}`));
+
+  layout();
+ }
+ function layout(){
+  win.classList.toggle('nv-wide',settings.expanded);panel.hidden=!settings.expanded;
+  root.querySelector('.nv-chat').setAttribute('aria-expanded',String(settings.expanded));
+  requestAnimationFrame(()=>{if(settings.expanded&&followMessages)messages.scrollTop=messages.scrollHeight;});
+ }
+ function update(data){
+  if(!data||data.revision<=revision)return;
+  applyLanguage(data);
+  revision=data.revision;
+  settings.state=data.state;
+  root.querySelector('.nv-status').textContent=labels[data.state]||data.state;
+  root.querySelector('.nv-hint').textContent=data.hint;
+  conversation=!!data.conversation;
+  mic.disabled=(!data.prepared||data.busy)&&!conversation;
+  root.querySelector('.nv-modes').hidden=!!data.mode;
+  root.querySelectorAll('.nv-mode').forEach(button=>{
+   button.disabled=!!data.busy||!!data.prepared;
+   button.setAttribute('aria-pressed',String(button.dataset.mode===data.mode));
+  });
+  const enroll=root.querySelector('.nv-enroll');
+  enroll.hidden=!data.prepared;
+  enroll.disabled=!!data.busy||conversation;
+  enroll.textContent=data.enrolled?'Registra nuovamente la mia voce':'Registra la mia voce';
+  root.querySelector('.nv-session').textContent=data.mode?
+   `${data.mode==='online'?'Online':'Local'} · ${data.identity==='alberto'?'Alberto · memoria abilitata':data.identity==='guest'?'Ospite · memoria disabilitata':data.enrolled?'Voce da verificare alla prossima conversazione':'Profilo vocale assente · memoria disabilitata'}`:'';
+  mic.classList.toggle('nv-active',conversation);
+  mic.setAttribute('aria-pressed',String(conversation));
+  const controlLabel=conversation?(language==='en'?'Stop conversation':'Ferma conversazione'):(language==='en'?'Start conversation':'Avvia conversazione');
+  mic.setAttribute('aria-label',controlLabel);mic.title=controlLabel;
+  if(data.session!==session){messages.replaceChildren();messageCount=0;session=data.session;}
+  const memoryStatus=root.querySelector('.nv-memory-status');
+  memoryStatus.hidden=data.identity!=='alberto'||!data.memory_status;
+  memoryStatus.textContent=data.identity==='alberto'?(data.memory_status||''):'';
+  root.querySelector('.nv-empty').hidden=data.messages.length>0;
+  if(data.messages.length===messageCount)return;
+  const atBottom=followMessages;
+  if(data.messages.length<messageCount){messages.replaceChildren();messageCount=0;}
+  const additions=data.messages.slice(messageCount);
+  messages.append(...additions.map(m=>{
+   const item=document.createElement('div'),label=document.createElement('span'),text=document.createElement('p');
+   item.className='nv-message';label.textContent=m.role==='user'?(language==='en'?'YOU':'TU'):'NOVA';text.textContent=m.text;
+   item.append(label,text);return item;
+  }));
+  messageCount=data.messages.length;
+  if(atBottom)messages.scrollTop=messages.scrollHeight;
+ }
+ const panelButtons=[root.querySelector('.nv-chat')];
+ for(const el of panelButtons)el.onclick=async()=>{
+  if(expanding)return;
+  expanding=true;panelButtons.forEach(button=>button.disabled=true);
+  try{
+   const expanded=!settings.expanded;
+   if(connected)await window.pywebview.api.expand(expanded);
+   settings.expanded=expanded;layout();
+  }catch(e){bridgeError();}
+  finally{expanding=false;panelButtons.forEach(button=>button.disabled=false);}
+ };
+ function bridgeError(){settings.state='error';root.querySelector('.nv-status').textContent=language==='en'?'Connection lost':'Connessione interrotta';root.querySelector('.nv-hint').textContent=language==='en'?'Close and reopen Nova.':'Chiudi e riapri Nova.';mic.disabled=true;}
+ mic.onclick=async()=>{
+  if(!connected||mic.disabled)return;mic.disabled=true;
+  try{if(conversation)await window.pywebview.api.stop_conversation();else await window.pywebview.api.start_turn();revision=-1;update(await window.pywebview.api.snapshot());}catch(e){bridgeError();}
+ };
+ async function poll(){
+  if(!connected)return;
+  try{update(await window.pywebview.api.snapshot(revision));setTimeout(poll,100);}catch(e){connected=false;bridgeError();}
+ }
+ root.querySelectorAll('.nv-mode').forEach(button=>button.addEventListener('click',async()=>{
+  if(!connected)return;
+  root.querySelectorAll('.nv-mode').forEach(item=>item.disabled=true);
+  try{await window.pywebview.api.select_mode(button.dataset.mode);update(await window.pywebview.api.snapshot());}catch(e){bridgeError();}
+ }));
+ root.querySelector('.nv-enroll').addEventListener('click',async()=>{
+  if(!connected)return;
+  if(!window.confirm('Registra tre frasi con la voce di Alberto. Il profilo resterà sul Mac. La verifica vocale può sbagliare e non impedisce la riproduzione di registrazioni. Continuare?'))return;
+  try{await window.pywebview.api.enroll_voice();update(await window.pywebview.api.snapshot());}catch(e){bridgeError();}
+ });
+ window.addEventListener('pywebviewready',async()=>{
+  connected=true;
+  try{update(await window.pywebview.api.ready());poll();}catch(e){bridgeError();}
+ });
+ root.querySelector('.nv-status').textContent='Caricamento';
+ root.querySelector('.nv-hint').textContent='Avvio della finestra Nova…';
+ layout();
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const rayCount=207;
+ const rays=Array.from({length:rayCount},(_,i)=>{
+  const y=1-2*(i+.5)/rayCount,a=i*Math.PI*(3-Math.sqrt(5)),r=Math.sqrt(1-y*y);
+  const rand=Math.sin(i*127.1+31.7)*43758.5453,seed=rand-Math.floor(rand);
+  return {x:Math.cos(a)*r,y,z:Math.sin(a)*r,len:.63+.37*seed,phase:seed*Math.PI*2,hue:seed>.48?266:211};
+ });
+ let lastFrame=null,t=0,angle=0,speakBlend=0,listenBlend=0,thinkBlend=0;
+ function draw(ms){
+  if(!canvas.isConnected)return;
+  const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height,dpr=Math.min(devicePixelRatio||1,2);
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const dt=lastFrame===null?0:Math.max(0,Math.min((ms-lastFrame)/1000,.05));lastFrame=ms;
+  const ease=1-Math.exp(-dt/.28),active=settings.state;
+  speakBlend+=((active==='speak'?1:0)-speakBlend)*ease;
+  listenBlend+=((active==='listen'?1:0)-listenBlend)*ease;
+  thinkBlend+=((active==='think'?1:0)-thinkBlend)*ease;
+  // Integrate rotation so state changes never jump to a new phase.
+  if(!reduced.matches){t+=dt;angle+=dt*.36432*thinkBlend;}
+  const cx=w/2,cy=h/2,R=Math.max(0,Math.min(w,h)/2-12),base=R*.82;
+  const envelope=.38+.62*Math.pow(.5+.5*Math.sin(t*3.8+.7*Math.sin(t*1.2)),1.3);
+  const ca=Math.cos(angle),sa=Math.sin(angle),tilt=.22*Math.sin(angle*.55);
+  const points=rays.map(ray=>{
+   const x=ray.x*ca+ray.z*sa,z=-ray.x*sa+ray.z*ca;
+   const y=ray.y*Math.cos(tilt)-z*Math.sin(tilt),zz=ray.y*Math.sin(tilt)+z*Math.cos(tilt);
+   const breath=reduced.matches?0:.025*Math.sin(t*1.6+ray.phase)+.018*Math.sin(t*2.7+ray.phase*2);
+   const voice=.8*speakBlend*(.16+.7*envelope*(.45+.55*Math.sin(t*6.2+ray.phase)**2));
+   const sweep=Math.sin(t*1.65)*1.2;
+   const attention=listenBlend*Math.exp(-(((y-sweep)/.3)**2));
+   const perspective=1/(1-zz*.13);
+   const rawLength=base*ray.len*(1+breath+voice-.085*attention);
+   // Reserve a soft edge for speech expansion instead of clipping the rays.
+   const limit=R/perspective,shoulder=limit*.85,room=limit*.15;
+   const length=rawLength<=shoulder||room===0?rawLength:shoulder+room*(1-Math.exp(-(rawLength-shoulder)/room));
+   return {x:cx+x*length*perspective,y:cy+y*length*perspective,z:zz,hue:ray.hue+(211-ray.hue)*attention,attention};
+  }).sort((a,b)=>a.z-b.z);
+  ctx.lineWidth=.65;
+  for(const p of points){
+   const opacity=Math.min(.96,.24+.53*(p.z+1)/2+.35*p.attention);
+   const g=ctx.createLinearGradient(cx,cy,p.x,p.y);
+   g.addColorStop(0,`hsla(${p.hue},95%,60%,.15)`);g.addColorStop(1,`hsla(${p.hue},95%,65%,${opacity})`);
+   ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p.x,p.y);ctx.stroke();
+   ctx.shadowColor=`hsl(${p.hue},100%,65%)`;ctx.shadowBlur=3+4*p.attention;
+   ctx.fillStyle=`hsla(${p.hue},100%,73%,${opacity+.12})`;
+   ctx.beginPath();ctx.arc(p.x,p.y,.65+.55*(p.z+1)/2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  const glow=9+Math.min(w/100,4)+(reduced.matches?0:Math.sin(t*1.6)*.7)+speakBlend*1.4;
+  const halo=ctx.createRadialGradient(cx,cy,0,cx,cy,glow*2.1);
+  halo.addColorStop(0,'rgba(90,95,255,.85)');halo.addColorStop(.16,'rgba(76,67,255,.66)');
+  halo.addColorStop(.42,'rgba(90,39,230,.24)');halo.addColorStop(1,'rgba(55,40,210,0)');
+  ctx.fillStyle=halo;ctx.fillRect(cx-glow*2.1,cy-glow*2.1,glow*4.2,glow*4.2);
+  requestAnimationFrame(draw);
+ }
+ requestAnimationFrame(draw);
+})();
+</script>
+
+</body></html>

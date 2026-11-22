@@ -1,0 +1,5 @@
+# Copy to config.toml. Never commit real keys.
+# Online mode requires both keys; local mode does not read them.
+API_KEY = ""
+JEV_API_KEY = ""
+# TYPESAFE_API_KEY in the environment can override JEV_API_KEY.
