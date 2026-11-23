@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
         exit_code = EXIT_FAILURE;
         goto closing;
     }
-    printf("Byte needed to store the image: %zu\n",capacity);
+    //printf("Byte needed to store the image: %zu\n",capacity);
 
     buffer = malloc(capacity);
     if(buffer == NULL){

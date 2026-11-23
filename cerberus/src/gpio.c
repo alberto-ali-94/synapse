@@ -18,8 +18,8 @@ int controller_fd(
 		close(controller_fd);
 		return -1;
 	}
-	printf("File descriptor assigned: %d\n",controller_fd);
-	printf("GPIO info: Name=%s, Label=%s, Lines=%u\n",(*info).name, (*info).label, (*info).lines);
+	//printf("File descriptor assigned: %d\n",controller_fd);
+	//printf("GPIO info: Name=%s, Label=%s, Lines=%u\n",(*info).name, (*info).label, (*info).lines);
 	return controller_fd;
 }
 
@@ -53,7 +53,7 @@ int controller_lines_request(
 	if(result == -1){
 		return -1;
 	}
-	printf("Line file descriptor: %d\n", (*request).fd);
+	//printf("Line file descriptor: %d\n", (*request).fd);
 	return 0;
 }
 
